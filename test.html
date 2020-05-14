@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p {
+  display: block;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+}
+.Palisade{
+	display: block;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 32px;
+	margin: 20px; 
+	text-align: center
+}
+button {
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+  transition-duration: 0.4s;
+  background-color: #000000; 
+  display: black;
+  width: 100%
+  margin: 5px; 
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+.container {
+	
+  width: 80%;
+  height: 200px;
+  background: white;
+  margin: auto;
+  padding: 10px;
+}
+
+.Nav-Bar { 
+  width: 15%;
+  background: white;
+  float: left;
+
+}
+.btn-group button {
+  background-color: #808080; 
+  border: 1px solid #000000; 
+  color: white; 
+
+  cursor: pointer; 
+  width: 95%; 
+  display: block; 
+}
+
+.content {
+width: 75%;
+  border: 1px solid #000000; 
+  margin-left: 15%;
+padding: 15px 32px;
+  background: white;
+}
+
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+<script>
+$(document).ready(function(){
+	$("#Example1").hide()
+	$("#Example2").hide()
+	$("#setup").hide()
+    $("#introduction").show();
+
+  $("#bintroduction").click(function(){
+	$("#Example1").hide()
+	$("#Example2").hide()
+	$("#setup").hide()
+    $("#introduction").show();
+  });
+});
+
+ $(document).ready(function(){ 
+  $("#bExample1").click(function(){
+	$("#introduction").hide()
+	$("#Example2").hide()
+	$("#setup").hide()
+    $("#Example1").show();
+  });
+});  
+
+
+ $(document).ready(function(){ 
+  $("#bExample2").click(function(){
+	$("#introduction").hide()
+	$("#Example1").hide()
+	$("#setup").hide()
+    $("#Example2").show();
+  });
+});
+
+ $(document).ready(function(){ 
+  $("#bsetup").click(function(){
+	$("#introduction").hide()
+	$("#Example1").hide()
+	$("#Example2").hide()
+    $("#setup").show();
+  });
+});
+</script>
+
+</head>
+<body>
+<div class="Palisade">
+Palisade Primer
+</div>
+<section class="container">
+<div class="Nav-Bar">
+<div class="btn-group">
+<button id = "bintroduction">Introduction</button></br>
+<button id = "bExample1">Program 1</button></br>
+<button id = "bExample2">Program 2</button></br>
+<button id = "bsetup">Setup</button></br>
+</div>
+</div>
+<div class = "content">
+
+<div id = "introduction">
+<p style="text-align:left">
+    This tutorial will guide you through development of your very own applications which can take advantage of homomorphic encryption.  We will demonstrate the ability to encrypt and decrypt given phrases. These phrases can be simple such as a word or it can be operations such as multiplication or addition. This guide assumes you have gained an understanding of the basic Palisade Library, build your own projects using cmake, and how to implement some basic programs. If you need some assistance, please refer to the Palisade Documentation for further information. Follow these links for more information: 
+ </br><a href="https://palisade-crypto.org/documentation/">Official Documentation</a> </br>
+ <a href="https://gitlab.com/palisade/palisade-release/-/wikis/home">GitLab Wiki</a> </br>
+ <a href="https://github.com/ThomasJRathbun/PalisadePrimer">Primer Github</a> </br>
+ <a href="https://github.com/ThomasJRathbun/PalisadePrimer/blob/master/Primer%20Tutorial.pdf">Primer PDF</a> </br>
+ 
+</p>
+</div>
+
+
+<div id = "Example1">
+<p>
+Primer Program #1: Homomorphic Addition and Multiplication
+To create a program that can perform encrypted operations, we need to first create a cryptocontext to be able to call the EvalAdd and EvalMult methods to add and multiply ciphertexts. These methods enable encrypted plaintexts called ciphertexts to be used in mathematical operations. The steps to create the program is to start with creating a cryptocontext. To do this simply establish the parameters first. In this cryptocontext, we will be using DCRTPoly for the underlying lattice layer element.
+We will use a simple plaintext modulus parameter. This signifies the maximum size of the data type to perform a modulus operation, in this case it is an unsigned 32 bit integer:
+            <pre class="prettyprint lang-c++">int plaintextModulus = 65537;</pre>
+Next we will establish sigma which will be as follows:
+<pre class="prettyprint lang-c++">double sigma = 3.2;</pre>
+Then we determine the security level which can be 128, 192, or 256 bit security. In this case it is 128 bit. This is shown below:
+<pre class="prettyprint lang-c++">SecurityLevel seclvl = HEStd_128_classic;</pre>
+Next we determine the maximum key-switching depth for the computation using an unsigned integer that is 32 bits long and defined as follows:
+<pre class="prettyprint lang-c++">uint32_t depth = 2;</pre>
+Finally we can create the cyrptocontext using our chosen lattice layer, DCRTPoly, and the parameters we have established. We also have to enable encryption and SHE which is somewhat homomorphic encryption which allows for limited computation on encrypted data.
+<pre class="prettyprint lang-c++">CryptoContext<DCRTPoly> cryptoContext = CryptoContextFactory<DCRTPoly>::genCryptoContextBFVrns(plaintextModulus, seclvl, sigma, 0, depth, 0, OPTIMIZED);
+            cryptoContext->Enable(ENCRYPTION);
+            cryptoContext->Enable(SHE);</pre>
+We then establish our keypair so that we can encrypt our plaintext into ciphertext.  To do this we need to use the KeyGen method provided by the cryptocontext.
+<pre class="prettyprint lang-c++">LPKeyPair<DCRTPoly> keyPair;
+            keyPair = cryptoContext->KeyGen();</pre>
+Then we use the EvalMultKeyGen method to enable the EvalAdd and EvalMult operations.
+            <pre class="prettyprint lang-c++">cryptoContext->EvalMultKeyGen(keyPair.secretKey);</pre>
+Now we can declare our plaintext. In this case, we are using an integer list using a vector array. We will declare three separate plaintexts to perform operations on. We will call the method MakePackedPlaintext to create an efficient encoder packing multiple integers into a single plaintext polynomial.
+<pre class="prettyprint lang-c++">std::vector<int64_t> intList1 = {1,2,3,4,5,6,7,8,9,10,11,12};
+            Plaintext plaintext1 = cryptoContext->MakePackedPlaintext(intList1);
+            std::vector<int64_t> intList2 = {12,11,10,1,2,3,9,8,7,4,5,6};
+            Plaintext plaintext2 = cryptoContext->MakePackedPlaintext(intList2);
+            std::vector<int64_t> intList3 = {12,11,10,9,8,7,6,5,4,3,2,1};
+            Plaintext plaintext3 = cryptoContext->MakePackedPlaintext(intList3);</pre>
+Next we create the ciphertext by using the Encrypt method and the keypair public key we generated earlier along with the plaintext we want to encrypt as parameters.
+<pre class="prettyprint lang-c++">auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintext1);
+            auto ciphertext2 = cryptoContext->Encrypt(keyPair.publicKey, plaintext2);
+            auto ciphertext3 = cryptoContext->Encrypt(keyPair.publicKey, plaintext3);</pre>
+We can finally perform the operations on the ciphertext using the EvalAdd and EvalMult methods.  The parameters are the ciphertexts we generated or a result of a previous EvalAdd or EvalMult result.
+            <pre class="prettyprint lang-c++">auto add12 = cryptoContext->EvalAdd(ciphertext1,ciphertext2);
+            auto add123 = cryptoContext->EvalAdd(add12, ciphertext3);
+            auto mult12 = cryptoContext->EvalMult(ciphertext1, ciphertext2);
+            auto mult123 = cryptoContext->EvalMult(mult12, ciphertext3);</pre>
+We can decrypt the results of the previous step using the Decrypt method along with the keypair secret key, the ciphertext addition or multiplication result, and the plaintext variable to save the decrypted result into as parameters.
+            <pre class="prettyprint lang-c++">Plaintext plaintextAddResult;
+            cryptoContext->Decrypt(keyPair.secretKey, add123, &plaintextAddResult);
+            Plaintext plaintextMultResult;
+            cryptoContext->Decrypt(keyPair.secretKey, mult123, &plaintextMultResult);</pre>
+Finally we display the results along with the original plaintexts.
+            <pre class="prettyprint lang-c++">cout << "Plaintext #1: " << plaintext1 << std::endl;
+            cout << "Plaintext #2: " << plaintext2 << std::endl;
+            cout << "Plaintext #3: " << plaintext3 << std::endl;
+            cout << "plaintexts 1 2 and 3 added together = " << plaintextAddResult << std::endl;
+            cout << "plaintexts 1 2 and 3 multiplied together = " << plaintextMultResult << std::endl;
+            return 0;</pre>
+Example of output:
+
+<img src="Example1Output.png"></img>
+
+</p>
+</div>
+
+
+<div id = "Example2">
+<p>
+Primer Program #2: Input Phrase Encryption and Decryption
+    This program is very similar to the previous primer we went over. This program is designed to take input from the user such as a phrase and store it in a variable called phrase. The program then proceed to call the method MakeStringPlainText(string) to convert the phrase into plaintext:
+   <pre class="prettyprint lang-c++">Plaintext plaintext1 = cryptoContext->MakeStringPlaintext(phrase1);
+   Plaintext plaintext2 = cryptoContext->MakeStringPlaintext(phrase2);
+   Plaintext plaintext3 = cryptoContext->MakeStringPlaintext(phrase3);</pre>
+
+This is then followed by calling the Encrypt method which takes our generated key and the phrase that would like to be encrypted.
+   <pre class="prettyprint lang-c++">auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintext1);
+   auto ciphertext2 = cryptoContext->Encrypt(keyPair.publicKey, plaintext2);
+   auto ciphertext3 = cryptoContext->Encrypt(keyPair.publicKey, plaintext3);</pre>
+
+We have now successfully encrypted the phrases that were inputted. Now the program calls the Decrypt method which takes in our generated key, encrypted text, and the reference of the variable where we are storing the decrypted text.
+   <pre class="prettyprint lang-c++">DecryptResult result = cryptoContext->Decrypt(keyPair.secretKey,ciphertext1,&plaintextDecrypted1);
+	</pre>
+Lastly, the program does 2 checks. First we see if the decryption was successful. If it is not then we let the user know.
+  <pre class="prettyprint lang-c++"> if (!result.isValid) {
+       cout << "Decryption failed" << endl;
+       return 1;
+   }
+</pre>
+Secondly, we check if the decrypted plaintext is the same as what we started with. If it’s not the same we display the results of the decrypted text to the user for further inspection.
+<pre class="prettyprint lang-c++">if( plaintext1 != plaintextDecrypted1 ) {
+       cout << "First decrypted plaintext does not match original plaintext!" << endl;
+       cout << "Original Plaintext: " << plaintext1 << endl;
+       cout << "Decrypted Plaintext: " << plaintextDecrypted1 << endl;
+       return 1;
+   }</pre>
+If both checks have passed, this means that we have successfully encrypted the inputted phrase. This process is repeated for each phrase that is inputted.
+Example of expected output:
+
+<img src="Example2Output.png"></img>
+</p>
+</div>
+
+<div id="setup">
+<p>
+If users are using the linux environment and want to run the compiled program then type the command: ./<your_program_name>. We used the PALISADE for building our project and ran these files. 
+Users should follow the steps to build and compile the programs. </br>
+</br></br>Step 1. Build and install PALISADE using “make install”. This will copy the PALISADE library files and header files to the directory chosen for installation.
+</br></br>Step 2.Create the folder for the project on the system. 
+</br></br>Step 3.Copy CMakeLists. Use.txt form the root directory of the git repo to the folder for the project. 
+</br></br>Step 4.Rename CMakeLists.User.txt to CMakeLists.txt. 
+</br></br>Step 5.Update CMakeLists.txt to specify the name of the executable and the source code files. For example, include the following line
+add_executable( fhe-demo demo-simple-Examples.cpp )
+If using MinGW/Windows(skip this step for other platforms), copy PreLoad.cmke 
+Form the root directory of the git repo to the folder for the project. 
+</br></br>Step 6. We create the build directory and cd to it
+mkdir build
+cd build
+</br></br>Step 7. Run
+cmake -DPALISADE_DIR=`<path_to_palisade>` ..
+</br></br>Step 8. Run “make” to build the executable. 
+
+</p>
+</div>
+</div>
+
+</section>
+</body>
+</html>
+
